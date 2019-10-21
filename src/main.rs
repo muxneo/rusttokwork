@@ -19,19 +19,7 @@ use plotters::prelude::*;
 use std::collections::vec_deque::VecDeque;
 
 
-const FPS: u32 = 10;
-
-
 fn main() {
-    // plotting histogram inits
-   let mut window: PistonWindow = WindowSettings::new("Realtime CPU Usage", [450, 300])
-        .samples(4)
-        .build()
-        .unwrap();
-    window.set_max_fps(FPS as u64);
-    let mut epoch = 0;
-    let mut data : Vec<u32> = vec![];
-
     // twitter inits
     const TRACK: &str = "twitter, facebook, google, travel, art, music, photography, love, fashion, food";
     let track_string = TRACK.split_whitespace().collect::<String>();
@@ -51,31 +39,12 @@ fn main() {
         .unwrap()
         .flatten_stream();
 
-
-
-
-
-//    let rest = tweetust::TwitterClient::new(
-//        token,
-//        tweetust::DefaultHttpHandler::with_https_connector().unwrap(),
-//    );
-
-
-
+    println!("");
     let bot = stream
         .for_each(move |json| {
 
             let json = Json::from_str(&json).unwrap();
             let textweet = json.find_path(&["text"]);
-            //if tweettext2 != None {
-            //    println!("{}",tweettext2);
-            //}
-            //else {  }
-
-            //match textweet {
-            //       Some(x) => println!("{}",x),
-            //        None => println!("None"),
-            //}
 
             if textweet.is_some(){
                 //println!("is some");
@@ -85,53 +54,16 @@ fn main() {
                     let words = word_regex.find_iter(&line).map(|(s, e)| &line[s..e]);
                     for word in words.map(str::to_lowercase) {
                         if(sent_vec.iter().any(|e| e == &word)){
-                            println!("{}",word);
+                            println!("");
+                            println!("Tweet = {}",line);
+                            println!("Word inside Tweet = {}",word);
                             *counts.entry(word).or_insert(0u32) += 1;
 
-                            let Some(_) = draw_piston_window(&mut window, |b| {
-                                let root = b.into_drawing_area();
-
-
-                                root.fill(&WHITE)?;
-
-                                let mut chart = ChartBuilder::on(&root)
-                                    .x_label_area_size(35)
-                                    .y_label_area_size(40)
-                                    .margin(5)
-                                    .caption("Histogram Test", ("Arial", 50.0).into_font())
-                                    .build_ranged(0u32..10u32, 0u32..10u32)?;
-
-                                chart
-                                    .configure_mesh()
-                                    .disable_x_mesh()
-                                    .line_style_1(&WHITE.mix(0.3))
-                                    .x_label_offset(30)
-                                    .y_desc("Count")
-                                    .x_desc("Bucket")
-                                    .axis_desc_style(("Arial", 15).into_font())
-                                    .draw()?;
-
-                                let data = [
-                                    0u32, 1, 1, 1, 4, 2, 5, 7, 8, 6, 4, 2, 1, 8, 3, 3, 3, 4, 4, 3, 3, 3,
-                                ];
-
-                                chart.draw_series(
-                                    Histogram::vertical(&chart)
-                                        .style(RED.mix(0.5).filled())
-                                        .data(data.iter().map(|x: &u32| (*x, 1))),
-                                )?;
-
-                                Ok(())
-
-
-                            });
-
-
-
-                            //print whole vector
-//                            for (word, count) in counts.iter() {
-//                                println!("###### {} {}", word, count);
-//                            }
+                            println!("Running total");
+                            //running total whole vector
+                            for (word, count) in counts.iter() {
+                                println!("## {} {}", word, count);
+                            }
                         }
 
                     }
@@ -140,9 +72,6 @@ fn main() {
             else{
                 //println!("NONE")
             }
-
-
-
 
             Ok(())
         }).map_err(|e| println!("error: {}", e));
