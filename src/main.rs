@@ -42,17 +42,23 @@ fn main() {
 //            .unwrap(),
 //    };
 
-    let (tx, rx): (Sender<&BTreeMap<String,u32>>, Receiver<&BTreeMap<String,u32>>) = mpsc::channel();
+    //let (tx, rx): (Sender<&BTreeMap<String,u32>>, Receiver<&BTreeMap<String,u32>>) = mpsc::channel();
+    let (tx, rx): (Sender<Vec<u32>>, Receiver<Vec<u32>>) = mpsc::channel();
 
     let mut epoch = 0;
-    let mut data : Vec<u32> = vec![];
+    let mut datax : Vec<u32> = Vec::new();
 
     // twitter inits
     const TRACK: &str = "twitter, facebook, google, travel, art, music, photography, love, fashion, food";
     let track_string = TRACK.split_whitespace().collect::<String>();
     println!("{}",track_string);
-    let sent_vec = track_string.split(',').map(String::from).collect::<Vec<String>>();
+    let mut sent_vec : Vec<String> = track_string.split(',').map(String::from).collect::<Vec<String>>();
     print!("{:?}", sent_vec);
+
+//    let (to_senti, from_senti) = (
+//        sent_vec[9],
+//        sent_vec[0],
+//    );
 
     let token = Token::new("2sIwehojHI7pvvYv7CTK6QQsx", "RDuVQi9sdSVMM1kZBPUdKIobmVLDJS1Ttjfvhy6g0B46cWP1xG", "1185374845745287168-h9UfqDNcELJDx46B0WTRoBges3IyJl", "UhFYLhOoXZEsiJv6WWf0elB0z5InNr00Hjt4dqhUSwXKF");
 
@@ -70,15 +76,8 @@ fn main() {
 
 
 
-
-//    let rest = tweetust::TwitterClient::new(
-//        token,
-//        tweetust::DefaultHttpHandler::with_https_connector().unwrap(),
-//    );
-    //let winsafe = Arc::new(Mutex::new(window));
-
-
     let child = thread::spawn(move || {
+        let sentiment_vec  = vec!["twitter, facebook, google, travel, art, music, photography, love, fashion, food"];
         let bot = stream
             .for_each(move |json| {
                 let json = Json::from_str(&json).unwrap();
@@ -90,16 +89,36 @@ fn main() {
                     for line in textweet2.as_string() {
                         //let line = line.expect("Error parsing stdin");
                         let words = word_regex.find_iter(&line).map(|(s, e)| &line[s..e]);
-                        for word in words.map(str::to_lowercase) {
+                        for mut word in words.map(str::to_lowercase) {
                             if (sent_vec.iter().any(|e| e == &word)) {
                                 println!("{}", word);
-                                *counts.entry(word).or_insert(0u32) += 1;
+                                *counts.entry(word.clone()).or_insert(0u32) += 1;
+                                //data.push(a.iter().position(|&x| x == 2));
+                                //let idx = sentiment_vec.iter().position(|x| *x == word).unwrap();
+                                let mut idx : u32 = 0;
 
+                                match word.as_ref() {
+                                    "twitter" => idx = 0,
+                                    "facebook" => idx = 1,
+                                    "google" => idx =2,
+                                    "travel" => idx = 3,
+                                    "art" => idx = 4,
+                                    "music" => idx = 5,
+                                    "photography" => idx = 6,
+                                    "love" => idx = 7,
+                                    "fashion" => idx = 8,
+                                    "food" => idx = 9,
+                                    _ => println!("something else!"),
+                                }
+
+
+                                datax.push(idx as u32);
+                                tx.send(datax.clone()).unwrap();
                                 //tx.send(&counts).unwrap();
                                 //print whole vector
-//                            for (word, count) in counts.iter() {
-//                                println!("###### {} {}", word, count);
-//                            }
+                                for (word, count) in counts.iter() {
+                                    println!("###### {} {}", word, count);
+                                }
                             }
                         }
                     }
@@ -135,8 +154,10 @@ fn main() {
                 .x_label_area_size(35)
                 .y_label_area_size(40)
                 .margin(5)
-                .caption("Histogram Test", ("Arial", 50.0).into_font())
-                .build_ranged(0u32..10u32, 0u32..10u32)?;
+                .caption("Twitter Word Sentiment - by Mrukant", ("Arial", 50.0).into_font())
+                .build_ranged(0u32..8u32, 0u32..10u32)?;
+                //.build_ranged(from_senti..to_senti, 0u32..100u32)?;
+                //.build_ranged(0u32..10u32, twitter, facebook, google, travel, art, music, photography, love, fashion, food)?;
 
             chart
                 .configure_mesh()
@@ -144,7 +165,7 @@ fn main() {
                 .line_style_1(&WHITE.mix(0.3))
                 .x_label_offset(30)
                 .y_desc("Count")
-                .x_desc("Bucket")
+                .x_desc("Sentiment Words")
                 .axis_desc_style(("Arial", 15).into_font())
                 .draw()?;
 
@@ -153,12 +174,14 @@ fn main() {
             //];
 
             //let btreemapcount = rx.recv();
+            let dataxx: Vec<u32> = rx.recv().unwrap();
+
 
 
             chart.draw_series(
                 Histogram::vertical(&chart)
                     .style(RED.mix(0.5).filled())
-                    .data(data.iter().map(|x: &u32| (*x, 1))),
+                    .data(dataxx.iter().map(|x: &u32| (*x, 1))),
             )?;
 
             Ok(())
