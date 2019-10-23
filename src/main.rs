@@ -22,27 +22,11 @@ use std::sync::mpsc::{Sender, Receiver};
 use std::sync::mpsc;
 use std::thread;
 
-
 const FPS: u32 = 10;
-
-//#[derive(Debug, Default)]
-pub struct A<'a>{
-    json : &'a str,
-    window : PistonWindow,
-}
 
 
 fn main() {
-    // plotting histogram inits
-//    let mut var1 = A{
-//      json : "",
-//        window : WindowSettings::new("Realtime CPU Usage", [450, 300])
-//            .samples(4)
-//            .build()
-//            .unwrap(),
-//    };
 
-    //let (tx, rx): (Sender<&BTreeMap<String,u32>>, Receiver<&BTreeMap<String,u32>>) = mpsc::channel();
     let (tx, rx): (Sender<Vec<u32>>, Receiver<Vec<u32>>) = mpsc::channel();
 
     let mut epoch = 0;
@@ -53,6 +37,7 @@ fn main() {
     let track_string = TRACK.split_whitespace().collect::<String>();
     println!("{}",track_string);
     let mut sent_vec : Vec<String> = track_string.split(',').map(String::from).collect::<Vec<String>>();
+    let sent_vec_xformatter = sent_vec.clone();
     print!("{:?}", sent_vec);
 
 //    let (to_senti, from_senti) = (
@@ -137,7 +122,7 @@ fn main() {
 
 
     //let child = thread::spawn(move || {
-        let mut window: PistonWindow = WindowSettings::new("Realtime CPU Usage", [450, 300])
+        let mut window: PistonWindow = WindowSettings::new("Realtime CPU Usage", [1200, 950])
             .samples(4)
             .build()
             .unwrap();
@@ -155,7 +140,8 @@ fn main() {
                 .y_label_area_size(40)
                 .margin(5)
                 .caption("Twitter Word Sentiment - by Mrukant", ("Arial", 50.0).into_font())
-                .build_ranged(0u32..8u32, 0u32..10u32)?;
+                //.build_ranged(sent_vec[0]..sent_vec[9], 0u32..10u32)?;
+                .build_ranged(0u32..9u32, 0u32..100u32)?;
                 //.build_ranged(from_senti..to_senti, 0u32..100u32)?;
                 //.build_ranged(0u32..10u32, twitter, facebook, google, travel, art, music, photography, love, fashion, food)?;
 
@@ -166,7 +152,8 @@ fn main() {
                 .x_label_offset(30)
                 .y_desc("Count")
                 .x_desc("Sentiment Words")
-                .axis_desc_style(("Arial", 15).into_font())
+                .axis_desc_style(("Arial", 35).into_font())
+                .x_label_formatter(&|x| format!("{}", sent_vec_xformatter[*x as usize]))
                 .draw()?;
 
             //let data = [
