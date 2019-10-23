@@ -17,17 +17,31 @@ use regex::Regex;
 use piston_window::{EventLoop, PistonWindow, WindowSettings};
 use plotters::prelude::*;
 use std::collections::vec_deque::VecDeque;
-
+use std::sync::{Arc,Mutex};
 
 const FPS: u32 = 10;
+
+//#[derive(Debug, Default)]
+pub struct A<'a>{
+    json : &'a str,
+    window : PistonWindow,
+}
 
 
 fn main() {
     // plotting histogram inits
-   let mut window: PistonWindow = WindowSettings::new("Realtime CPU Usage", [450, 300])
+//    let mut var1 = A{
+//      json : "",
+//        window : WindowSettings::new("Realtime CPU Usage", [450, 300])
+//            .samples(4)
+//            .build()
+//            .unwrap(),
+//    };
+    let mut window: PistonWindow = WindowSettings::new("Realtime CPU Usage", [450, 300])
         .samples(4)
         .build()
         .unwrap();
+
     window.set_max_fps(FPS as u64);
     let mut epoch = 0;
     let mut data : Vec<u32> = vec![];
@@ -59,11 +73,18 @@ fn main() {
 //        token,
 //        tweetust::DefaultHttpHandler::with_https_connector().unwrap(),
 //    );
-
+    let winsafe = Arc::new(Mutex::new(window));
 
 
     let bot = stream
         .for_each(move |json| {
+//            let mut var1 = A{
+//                json : "",
+//                window : WindowSettings::new("Realtime CPU Usage", [450, 300])
+//                    .samples(4)
+//                    .build()
+//                    .unwrap(),
+//            };
 
             let json = Json::from_str(&json).unwrap();
             let textweet = json.find_path(&["text"]);
@@ -88,7 +109,13 @@ fn main() {
                             println!("{}",word);
                             *counts.entry(word).or_insert(0u32) += 1;
 
-                            let Some(_) = draw_piston_window(&mut window, |b| {
+
+                            let winsafe_ref = Arc::clone(&winsafe);
+                            let mut win = winsafe_ref.lock().unwrap();
+
+
+
+                            let event: _ = draw_piston_window(&mut win, |b| {
                                 let root = b.into_drawing_area();
 
 
@@ -124,7 +151,7 @@ fn main() {
                                 Ok(())
 
 
-                            });
+                            }).unwrap();
 
 
 
