@@ -63,7 +63,7 @@ fn main() {
                         let words = word_regex.find_iter(&line).map(|(s, e)| &line[s..e]);
                         for mut word in words.map(str::to_lowercase) {
                             if (sent_vec.iter().any(|e| e == &word)) {
-                                println!("{}", word);
+//                                println!("{}", word);
                                 *counts.entry(word.clone()).or_insert(0u32) += 1;
 
                                 let mut idx : u32 = 0;
@@ -86,9 +86,9 @@ fn main() {
                                 tx.send(datax.clone()).unwrap();
                                 //tx.send(&counts).unwrap();
                                 //print whole vector
-                                for (word, count) in counts.iter() {
-                                    println!("###### {} {}", word, count);
-                                }
+//                                for (word, count) in counts.iter() {
+//                                    println!("###### {} {}", word, count);
+//                                }
                             }
                         }
                     }
