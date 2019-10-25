@@ -1,11 +1,3 @@
-extern crate serde_json as json;
-extern crate tweetust;
-extern crate twitter_stream;
-extern crate twitter_stream_message;
-extern crate rustc_serialize;
-extern crate regex;
-
-
 use std::fs::File;
 use std::path::PathBuf;
 use twitter_stream::rt::{self, Future, Stream};
@@ -110,7 +102,7 @@ fn main() {
     });
 
 
-    let mut window: PistonWindow = WindowSettings::new("Realtime CPU Usage", [1200, 950])
+    let mut window: PistonWindow = WindowSettings::new("Twitter Sentiment meter", [1300, 950])
             .samples(4)
             .build()
             .unwrap();
@@ -127,18 +119,30 @@ fn main() {
                 .x_label_area_size(35)
                 .y_label_area_size(40)
                 .margin(5)
+                .margin_left(100)
+                .margin_right(100)
+                .margin_bottom(100)
+                .set_left_and_bottom_label_area_size(100)
                 .caption("Twitter Word Sentiment - by Mrukant", ("Arial", 70.0).into_font())
-                .build_ranged(0u32..9u32, 0u32..100u32)?;
+                .build_ranged(0u32..10u32, 0u32..100u32)?;
+
 
             chart
                 .configure_mesh()
                 .disable_x_mesh()
+                .disable_y_mesh()
                 .line_style_1(&WHITE.mix(0.3))
-                .x_label_offset(60)
+                .x_label_offset(70)
                 .y_desc("Time")
                 .x_desc("Sentiment Words")
-                .axis_desc_style(("Arial", 35).into_font())
-                .x_label_formatter(&|x| format!("{}", sent_vec_xformatter[*x as usize]))
+                .axis_desc_style(("Arial", 60).into_font())
+                .x_label_formatter(&|x| {
+
+                        format!("{}", sent_vec_xformatter[xaxis_format_helper(*x as usize)])
+
+                })
+                .label_style(("Arial", 30).into_font())
+                .x_labels(11)
                 .draw()?;
 
             let dataxx: Vec<u32> = rx.recv().unwrap();
@@ -153,4 +157,13 @@ fn main() {
 
 
         }){}
+}
+
+fn xaxis_format_helper(x : usize) -> usize {
+    if x == 10 {
+       x-1
+    }
+    else {
+        x
+    }
 }
