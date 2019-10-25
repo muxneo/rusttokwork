@@ -1,11 +1,3 @@
-extern crate serde_json as json;
-extern crate tweetust;
-extern crate twitter_stream;
-extern crate twitter_stream_message;
-extern crate rustc_serialize;
-extern crate regex;
-
-
 use std::fs::File;
 use std::path::PathBuf;
 use twitter_stream::rt::{self, Future, Stream};
